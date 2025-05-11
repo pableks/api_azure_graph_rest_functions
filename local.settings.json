@@ -1,0 +1,13 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "java",
+    "DB_USERNAME": "ADMIN",
+    "DB_PASSWORD": "PassCloud123",
+    "DB_TNS_ADMIN": "g82idu9csvrtaymm_high",
+    "DB_WALLET_PATH": "/wallet",
+    "EVENT_GRID_TOPIC_ENDPOINT": "https://topiccloud2.eastus-1.eventgrid.azure.net/api/events",
+    "EVENT_GRID_ACCESS_KEY": "2d4V2OvN8ZQISFQxvkVsX4Of4tuv3gD4W3p4ZLM8K5APV4re0wv3JQQJ99BEACYeBjFXJ3w3AAABAZEGK7uT"
+  }
+}
