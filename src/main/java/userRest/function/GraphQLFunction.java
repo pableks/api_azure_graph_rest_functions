@@ -19,6 +19,7 @@ import graphql.schema.GraphQLSchema;
 import userRest.graphql.UserMutationResolver;
 import userRest.graphql.UserQueryResolver;
 import userRest.model.User;
+import userRest.connection.DatabaseConnection;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 public class GraphQLFunction {
@@ -74,22 +75,12 @@ public class GraphQLFunction {
         final ExecutionContext context
         
         ) {
-            System.out.println("Pase por Aca 6 "+request);
-            context.getLogger().info("Request recibido en GRAPHQL"); // Agregar log
-
+            context.getLogger().info("Request recibido en GRAPHQL");
+            
+            // Establecer el contexto para que lo use la conexión a la base de datos
+            DatabaseConnection.setExecutionContext(context);
+            
             try {
-                /*ObjectMapper objectMapper = new ObjectMapper();
-                JsonNode json = objectMapper.readTree(request.getBody().orElse("{}"));
-                System.out.println("Pase por Aca 7 ");
-                context.getLogger().info("Request recibido en GRAPHQL" + json + objectMapper); // Agregar log
-                
-
-                String query = json.get("query").asText();
-                JsonNode variablesNode = json.get("variables");
-
-                Map<String, Object> variables = variablesNode != null && !variablesNode.isNull()
-                ? objectMapper.convertValue(variablesNode, new TypeReference<Map<String, Object>>() {})
-                : Map.of();*/
                 ObjectMapper objectMapper = new ObjectMapper();
                 String requestBody = request.getBody().orElse("{}");
                 context.getLogger().info("Raw Body: " + requestBody);
@@ -111,13 +102,6 @@ public class GraphQLFunction {
                     ? objectMapper.convertValue(variablesNode, new TypeReference<>() {})
                     : Map.of();
                 
-                System.out.println("Pase por Aca 8");
-                context.getLogger().info("Parsed GraphQL query: " + query);
-
-
-
-                System.out.println("Pase por Aca 8 ");
-                // Agregar un log aquí para ver si esta parte del código se ejecuta correctamente.
                 context.getLogger().info("Parsed GraphQL query: " + query);
 
                 ExecutionInput executionInput = ExecutionInput.newExecutionInput()
@@ -126,10 +110,9 @@ public class GraphQLFunction {
                         .build();
 
                 ExecutionResult result = graphQL.execute(executionInput);
-                System.out.println("Pase por Aca 9 ");
+                
                 // Verificar la respuesta de la ejecución de GraphQL
                 context.getLogger().info("Execution Result: " + result.getData().toString());
-
 
                 Map<String, Object> response = result.toSpecification();
 
@@ -141,9 +124,12 @@ public class GraphQLFunction {
 
             } catch (Exception e) {
                 context.getLogger().severe("Error ejecutando la consulta GraphQL: " + e.getMessage());
+                if (e.getCause() != null) {
+                    context.getLogger().severe("Caused by: " + e.getCause().getMessage());
+                }
                 return request
                         .createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("{\"error\":\"Error procesando la petición GraphQL\"}")
+                        .body("{\"error\":\"Error procesando la petición GraphQL: " + e.getMessage() + "\"}")
                         .build();
             }
     }

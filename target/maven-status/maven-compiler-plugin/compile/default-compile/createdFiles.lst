@@ -1,0 +1,12 @@
+userRest/event/EventGridProducer.class
+userRest/Function.class
+userRest/graphql/UserMutationResolver.class
+userRest/function/UserRestFunction.class
+userRest/graphql/UserQueryResolver.class
+userRest/function/UserRestFunction$2.class
+userRest/function/GraphQLFunction$1.class
+userRest/function/UserRestFunction$1.class
+userRest/connection/UserDAO.class
+userRest/connection/DatabaseConnection.class
+userRest/function/GraphQLFunction.class
+userRest/model/User.class

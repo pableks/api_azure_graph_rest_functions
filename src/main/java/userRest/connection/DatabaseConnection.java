@@ -1,22 +1,45 @@
 package userRest.connection;
 
-import java.util.logging.Logger;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+import com.microsoft.azure.functions.ExecutionContext;
 
 public class DatabaseConnection {
-    private static final Logger logger = Logger.getLogger(DatabaseConnection.class.getName());
+    // Variable estática para almacenar el contexto de ejecución actual
+    public static ExecutionContext currentContext;
+
+    // Método para establecer el contexto desde la función invocada
+    public static void setExecutionContext(ExecutionContext context) {
+        currentContext = context;
+    }
+
+    // Método para loggear usando el contexto de Azure si está disponible
+    private static void logInfo(String message) {
+        if (currentContext != null) {
+            currentContext.getLogger().info(message);
+        } else {
+            // Fallback si no hay contexto (por ejemplo, en pruebas locales)
+            System.out.println(message);
+        }
+    }
+    
+    private static void logError(String message, Throwable e) {
+        if (currentContext != null) {
+            currentContext.getLogger().severe(message + ": " + e.getMessage());
+        } else {
+            System.err.println(message + ": " + e.getMessage());
+        }
+    }
 
     public static boolean testConnection() {
         try (Connection conn = getConnection()) {
-            System.out.println("Pase por Base de datos 1");
             boolean isValid = conn.isValid(5);
-            logger.info("Conexión a la base de datos probada: " + (isValid ? "Válida" : "Inválida"));
+            logInfo("Conexión a la base de datos probada: " + (isValid ? "Válida" : "Inválida"));
             return isValid;
         } catch (SQLException e) {
-            logger.severe("Error al probar la conexión: " + e.getMessage());
+            logError("Error al probar la conexión", e);
             return false;
         }
     }
@@ -27,17 +50,11 @@ public class DatabaseConnection {
             // Load the Oracle JDBC driver
             Class.forName("oracle.jdbc.driver.OracleDriver");
             
-            // Get credentials from environment variables (set in local.settings.json)
+            // Get credentials from environment variables
+            String tnsName = System.getenv("ORACLE_TNS_NAME");
             String user = System.getenv("ORACLE_USER");
             String password = System.getenv("ORACLE_PASSWORD");
-            String tnsName = System.getenv("ORACLE_TNS_NAME");
             String walletPath = System.getenv("ORACLE_WALLET_PATH");
-            
-            // Debug output
-            System.out.println("Oracle connection details:");
-            System.out.println("User: " + user);
-            System.out.println("TNS Name: " + tnsName);
-            System.out.println("Wallet Path: " + walletPath);
             
             // Use defaults if environment variables are not set (for local testing)
             if (user == null) user = "ADMIN";
@@ -47,25 +64,34 @@ public class DatabaseConnection {
             
             // Build connection string
             String url = "jdbc:oracle:thin:@" + tnsName + "?TNS_ADMIN=" + walletPath;
-            System.out.println("Connection URL: " + url);
             
             // Set connection properties
             Properties props = new Properties();
             props.setProperty("user", user);
             props.setProperty("password", password);
+            props.setProperty("oracle.net.ssl_version", "1.2");
             props.setProperty("oracle.net.wallet_location", "(SOURCE=(METHOD=file)(METHOD_DATA=(DIRECTORY=" + walletPath + ")))");
+            
+            // Log connection details
+            logInfo("Configurando conexión a la base de datos:");
+            logInfo("URL: " + url);
+            logInfo("Usuario: " + user);
+            logInfo("Ubicación del wallet: " + props.getProperty("oracle.net.wallet_location"));
             
             // Connect to the database
             Connection conn = DriverManager.getConnection(url, props);
-            System.out.println("Database connection established successfully");
+            logInfo("Conexión establecida correctamente.");
             return conn;
             
         } catch (ClassNotFoundException e) {
-            System.err.println("Oracle JDBC driver not found: " + e.getMessage());
+            logError("Oracle JDBC driver no encontrado", e);
             throw new SQLException("Oracle JDBC driver not found", e);
         } catch (SQLException e) {
-            System.err.println("Database connection error: " + e.getMessage());
+            logError("Error al establecer la conexión", e);
             throw e;
+        } catch (Exception e) {
+            logError("Error inesperado al establecer la conexión", e);
+            throw new SQLException("Unexpected error establishing database connection", e);
         }
     }
 }

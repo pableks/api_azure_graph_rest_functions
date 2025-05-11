@@ -1,0 +1,9 @@
+/Users/pablojavier/Documents/Study/EFT_Cloud2/Sumativa3/S3_S8_Grupo12/api_azure_graph_rest_functions/src/main/java/userRest/connection/UserDAO.java
+/Users/pablojavier/Documents/Study/EFT_Cloud2/Sumativa3/S3_S8_Grupo12/api_azure_graph_rest_functions/src/main/java/userRest/function/GraphQLFunction.java
+/Users/pablojavier/Documents/Study/EFT_Cloud2/Sumativa3/S3_S8_Grupo12/api_azure_graph_rest_functions/src/main/java/userRest/function/UserRestFunction.java
+/Users/pablojavier/Documents/Study/EFT_Cloud2/Sumativa3/S3_S8_Grupo12/api_azure_graph_rest_functions/src/main/java/userRest/event/EventGridProducer.java
+/Users/pablojavier/Documents/Study/EFT_Cloud2/Sumativa3/S3_S8_Grupo12/api_azure_graph_rest_functions/src/main/java/userRest/connection/DatabaseConnection.java
+/Users/pablojavier/Documents/Study/EFT_Cloud2/Sumativa3/S3_S8_Grupo12/api_azure_graph_rest_functions/src/main/java/userRest/graphql/UserMutationResolver.java
+/Users/pablojavier/Documents/Study/EFT_Cloud2/Sumativa3/S3_S8_Grupo12/api_azure_graph_rest_functions/src/main/java/userRest/graphql/UserQueryResolver.java
+/Users/pablojavier/Documents/Study/EFT_Cloud2/Sumativa3/S3_S8_Grupo12/api_azure_graph_rest_functions/src/main/java/userRest/Function.java
+/Users/pablojavier/Documents/Study/EFT_Cloud2/Sumativa3/S3_S8_Grupo12/api_azure_graph_rest_functions/src/main/java/userRest/model/User.java

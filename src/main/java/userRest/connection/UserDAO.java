@@ -3,26 +3,47 @@ package userRest.connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
+import com.microsoft.azure.functions.ExecutionContext;
 
 import userRest.event.EventGridProducer;
 import userRest.model.User;
 
 public class UserDAO {
-
     private static final EventGridProducer eventProducer = new EventGridProducer();
+
+    // Método para registrar logs usando el contexto de Azure
+    private static void logInfo(String message) {
+        // Usamos el mismo contexto que se configuró en DatabaseConnection
+        if (DatabaseConnection.currentContext != null) {
+            DatabaseConnection.currentContext.getLogger().info(message);
+        } else {
+            System.out.println(message);
+        }
+    }
+
+    private static void logError(String message, Throwable e) {
+        if (DatabaseConnection.currentContext != null) {
+            DatabaseConnection.currentContext.getLogger().severe(message + ": " + e.getMessage());
+            if (e.getCause() != null) {
+                DatabaseConnection.currentContext.getLogger().severe("Caused by: " + e.getCause().getMessage());
+            }
+        } else {
+            System.err.println(message + ": " + e.getMessage());
+        }
+    }
 
     // Obtener todos los usuarios
     public static List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
         String query = "SELECT ID, EMAIL, PASSWORD, ROL FROM USUARIOS";
 
-        System.out.println("Iniciando consulta para obtener todos los usuarios: " + query);
+        logInfo("Iniciando consulta para obtener todos los usuarios: " + query);
 
         try (Connection conn = DatabaseConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(query);
             ResultSet rs = stmt.executeQuery()) {
             
-            System.out.println("Consulta ejecutada: " + query);
+            logInfo("Consulta ejecutada: " + query);
             
             while (rs.next()) {
                 users.add(new User(
@@ -33,14 +54,13 @@ public class UserDAO {
             }
             
             if (users.isEmpty()) {
-                System.out.println("No se encontraron usuarios en la base de datos.");
+                logInfo("No se encontraron usuarios en la base de datos.");
             } else {
-                System.out.println("Usuarios obtenidos: " + users.size());
+                logInfo("Usuarios obtenidos: " + users.size());
             }
 
         } catch (SQLException e) {
-            System.out.println("Error en la consulta: " + e.getMessage());
-            e.printStackTrace();
+            logError("Error en la consulta", e);
         }
         return users;
     }
@@ -48,6 +68,7 @@ public class UserDAO {
     // Obtener usuario por ID
     public static User getUserById(long id) {
         String query = "SELECT ID, EMAIL, PASSWORD, ROL FROM USUARIOS WHERE ID = ?";
+        logInfo("Consultando usuario con ID: " + id);
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -56,15 +77,19 @@ public class UserDAO {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                return new User(
+                User user = new User(
                         rs.getLong("ID"),
                         rs.getString("EMAIL"),
                         rs.getString("PASSWORD"),
                         rs.getLong("ROL"));
+                logInfo("Usuario encontrado: ID=" + id);
+                return user;
+            } else {
+                logInfo("No se encontró usuario con ID=" + id);
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            logError("Error al consultar usuario por ID", e);
         }
         return null;
     }
@@ -72,6 +97,7 @@ public class UserDAO {
     // Crear usuario - Implementación directa en base de datos
     public static boolean createUser(String email, String password, Long roleId) {
         String query = "INSERT INTO USUARIOS (EMAIL, PASSWORD, ROL) VALUES (?, ?, ?)";
+        logInfo("Creando nuevo usuario: email=" + email + ", roleId=" + roleId);
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -81,13 +107,12 @@ public class UserDAO {
             stmt.setLong(3, roleId);
             
             int rowsAffected = stmt.executeUpdate();
-            System.out.println("Usuario creado. Filas afectadas: " + rowsAffected);
+            logInfo("Usuario creado. Filas afectadas: " + rowsAffected);
             
             return rowsAffected > 0;
             
         } catch (SQLException e) {
-            System.err.println("Error al crear usuario: " + e.getMessage());
-            e.printStackTrace();
+            logError("Error al crear usuario", e);
             return false;
         }
     }
@@ -95,6 +120,7 @@ public class UserDAO {
     // Actualizar usuario - Implementación directa en base de datos
     public static boolean updateUser(long id, String email, String password, Long roleId) {
         String query = "UPDATE USUARIOS SET EMAIL = ?, PASSWORD = ?, ROL = ? WHERE ID = ?";
+        logInfo("Actualizando usuario ID=" + id + ": email=" + email + ", roleId=" + roleId);
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -105,13 +131,12 @@ public class UserDAO {
             stmt.setLong(4, id);
             
             int rowsAffected = stmt.executeUpdate();
-            System.out.println("Usuario actualizado. Filas afectadas: " + rowsAffected);
+            logInfo("Usuario actualizado. Filas afectadas: " + rowsAffected);
             
             return rowsAffected > 0;
             
         } catch (SQLException e) {
-            System.err.println("Error al actualizar usuario: " + e.getMessage());
-            e.printStackTrace();
+            logError("Error al actualizar usuario", e);
             return false;
         }
     }
@@ -119,6 +144,7 @@ public class UserDAO {
     // Eliminar usuario - Implementación directa en base de datos
     public static boolean deleteUser(long id) {
         String query = "DELETE FROM USUARIOS WHERE ID = ?";
+        logInfo("Eliminando usuario con ID=" + id);
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -126,13 +152,12 @@ public class UserDAO {
             stmt.setLong(1, id);
             
             int rowsAffected = stmt.executeUpdate();
-            System.out.println("Usuario eliminado. Filas afectadas: " + rowsAffected);
+            logInfo("Usuario eliminado. Filas afectadas: " + rowsAffected);
             
             return rowsAffected > 0;
             
         } catch (SQLException e) {
-            System.err.println("Error al eliminar usuario: " + e.getMessage());
-            e.printStackTrace();
+            logError("Error al eliminar usuario", e);
             return false;
         }
     }
