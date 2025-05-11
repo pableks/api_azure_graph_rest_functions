@@ -14,9 +14,19 @@ import com.azure.messaging.eventgrid.EventGridPublisherClientBuilder;
 
 /**
  * EventGridProducer handles sending events to Azure Event Grid
- * for user operations (create, update, delete)
+ * for user operations (create, update, delete) and role operations
  */
 public class EventGridProducer {
+    
+    // Event types
+    public static final String EVENT_USER_CREATED = "UserCreated";
+    public static final String EVENT_USER_UPDATED = "UserUpdated";
+    public static final String EVENT_USER_DELETED = "UserDeleted";
+    public static final String EVENT_ROLE_DELETED = "RoleDeleted";
+    public static final String EVENT_DEFAULT_ROLE_ASSIGNED = "DefaultRoleAssigned";
+    
+    // Default role ID to use when creating users without a role
+    public static final Long DEFAULT_ROLE_ID = 2L; // Basic user role ID
     
     private final EventGridPublisherClient<EventGridEvent> eventGridPublisherClient;
     private final String eventGridTopicEndpoint = "https://topiccloud2.eastus-1.eventgrid.azure.net/api/events";
@@ -67,6 +77,74 @@ public class EventGridProducer {
             System.out.println("Successfully sent event to Event Grid: " + eventType);
         } catch (Exception e) {
             System.err.println("Error sending event to Event Grid: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Send a role deleted event
+     */
+    public void sendRoleDeletedEvent(Long roleId) {
+        try {
+            // Create a map with the role information
+            Map<String, Object> eventData = Map.of(
+                "roleId", roleId
+            );
+            
+            // Convert to JSON
+            String eventDataJson = objectMapper.writeValueAsString(eventData);
+            BinaryData data = BinaryData.fromString(eventDataJson);
+
+            // Create and send event
+            EventGridEvent event = new EventGridEvent(
+                "Role Event: Role Deleted",
+                EVENT_ROLE_DELETED,
+                data,
+                "1.0"
+            );
+            
+            event.setEventTime(OffsetDateTime.now());
+            
+            // Send event to Event Grid
+            eventGridPublisherClient.sendEvent(event);
+            System.out.println("Role deleted event sent to Event Grid for roleId: " + roleId);
+        } catch (Exception e) {
+            System.err.println("Error sending role deleted event: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Send an event for default role assignment
+     */
+    public void sendDefaultRoleAssignedEvent(User user) {
+        try {
+            // Create a map with the user and role information
+            Map<String, Object> eventData = Map.of(
+                "userId", user.getId(),
+                "email", user.getEmail(),
+                "roleId", user.getRoleId()
+            );
+            
+            // Convert to JSON
+            String eventDataJson = objectMapper.writeValueAsString(eventData);
+            BinaryData data = BinaryData.fromString(eventDataJson);
+
+            // Create and send event
+            EventGridEvent event = new EventGridEvent(
+                "User Event: Default Role Assigned",
+                EVENT_DEFAULT_ROLE_ASSIGNED,
+                data,
+                "1.0"
+            );
+            
+            event.setEventTime(OffsetDateTime.now());
+            
+            // Send event to Event Grid
+            eventGridPublisherClient.sendEvent(event);
+            System.out.println("Default role assigned event sent for user: " + user.getEmail());
+        } catch (Exception e) {
+            System.err.println("Error sending default role assigned event: " + e.getMessage());
             e.printStackTrace();
         }
     }

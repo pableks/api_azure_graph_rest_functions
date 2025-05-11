@@ -117,6 +117,59 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Create a user and let the consumer assign the default role if needed
+     */
+    public static boolean createUserWithDefaultRole(String email, String password, Long roleId) {
+        String query = "INSERT INTO USUARIOS (EMAIL, PASSWORD, ROL) VALUES (?, ?, ?)";
+        logInfo("Creating new user: email=" + email + ", roleId=" + roleId);
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query, new String[]{"ID"})) {
+            
+            stmt.setString(1, email);
+            stmt.setString(2, password);
+            
+            // If roleId is null or invalid, set it to NULL in the database
+            if (roleId == null || roleId <= 0) {
+                stmt.setNull(3, Types.BIGINT);
+                logInfo("No role specified, setting to NULL (consumer will assign default)");
+            } else {
+                stmt.setLong(3, roleId);
+            }
+            
+            int rowsAffected = stmt.executeUpdate();
+            
+            // Get the newly created user ID for event publishing
+            Long userId = null;
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    userId = rs.getLong(1);
+                }
+            }
+            
+            if (rowsAffected > 0 && userId != null) {
+                logInfo("User created with ID: " + userId + ", Rows affected: " + rowsAffected);
+                
+                // Create User object for the event (role might be null)
+                User newUser = new User(userId, email, password, roleId);
+                
+                // Send the user created event
+                EventGridProducer eventProducer = new EventGridProducer();
+                eventProducer.sendEvent(EventGridProducer.EVENT_USER_CREATED, newUser);
+                
+                return true;
+            } else {
+                logInfo("User creation failed, no ID generated");
+                return false;
+            }
+            
+        } catch (SQLException e) {
+            logError("Error al crear usuario", e);
+            return false;
+        }
+    }
+
     // Actualizar usuario - Implementación directa en base de datos
     public static boolean updateUser(long id, String email, String password, Long roleId) {
         String query = "UPDATE USUARIOS SET EMAIL = ?, PASSWORD = ?, ROL = ? WHERE ID = ?";
@@ -162,3 +215,4 @@ public class UserDAO {
         }
     }
 }
+
