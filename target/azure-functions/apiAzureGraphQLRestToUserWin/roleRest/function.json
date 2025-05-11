@@ -1,0 +1,15 @@
+{
+  "scriptFile" : "../apiAzureGraphQLRestToUserWin-1.0-SNAPSHOT.jar",
+  "entryPoint" : "userRest.function.RoleRestFunction.run",
+  "bindings" : [ {
+    "type" : "httpTrigger",
+    "direction" : "in",
+    "name" : "req",
+    "methods" : [ "GET", "POST", "PUT", "DELETE" ],
+    "authLevel" : "ANONYMOUS"
+  }, {
+    "type" : "http",
+    "direction" : "out",
+    "name" : "$return"
+  } ]
+}

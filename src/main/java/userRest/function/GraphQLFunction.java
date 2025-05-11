@@ -18,7 +18,10 @@ import graphql.schema.GraphQLSchema;
 //import userRest.event.EventGridProducer;
 import userRest.graphql.UserMutationResolver;
 import userRest.graphql.UserQueryResolver;
+import userRest.graphql.RoleMutationResolver;
+import userRest.graphql.RoleQueryResolver;
 import userRest.model.User;
+import userRest.model.Role;
 import userRest.connection.DatabaseConnection;
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -46,17 +49,16 @@ public class GraphQLFunction {
 
             String sdl = new String(schemaStream.readAllBytes(), StandardCharsets.UTF_8);
             System.out.println("Pase por Aca 3 "+sdl);
-            //UserQueryResolver userResolver = new UserQueryResolver();
 
             GraphQLSchema schema = SchemaParser.newParser()
                 .schemaString(sdl)
-                //.resolvers(new UserResolver())
                 .resolvers(
-                    new UserQueryResolver(),    // Resolver para consultas
-                    new UserMutationResolver()  // Resolver para mutaciones
-                    //new UserMutationResolver(eventPublisher)  // Resolver para mutaciones
-                    )
-                .dictionary(User.class)
+                    new UserQueryResolver(),    // Resolver para consultas de usuarios
+                    new UserMutationResolver(),  // Resolver para mutaciones de usuarios
+                    new RoleQueryResolver(),     // Resolver para consultas de roles
+                    new RoleMutationResolver()   // Resolver para mutaciones de roles
+                )
+                .dictionary(User.class, Role.class)
                 .build()
                 .makeExecutableSchema();
             System.out.println("Pase por Aca 4"+schema);

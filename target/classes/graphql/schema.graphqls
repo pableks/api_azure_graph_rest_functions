@@ -6,10 +6,18 @@ type User {
   roleId: ID
 }
 
+type Role {
+  id: ID
+  title: String
+  description: String
+}
+
 # Consultas
 type Query {
   getAllUsers: [User]
   getUserById(id: ID): User
+  getAllRoles: [Role]
+  getRoleById(id: ID): Role
 }
 
 # Mutaciones
@@ -17,4 +25,9 @@ type Mutation {
   createUser(email: String, password: String, roleId: ID): Boolean
   updateUser(id: ID, email: String, password: String, roleId: ID): Boolean
   deleteUser(id: ID): Boolean
+  
+  # Role mutations
+  createRole(title: String, description: String): Boolean
+  updateRole(id: ID, title: String, description: String): Boolean
+  deleteRole(id: ID): Boolean
 }
