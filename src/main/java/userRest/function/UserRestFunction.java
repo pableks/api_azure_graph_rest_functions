@@ -92,13 +92,14 @@ public class UserRestFunction {
             
             User newUser = objectMapper.readValue(requestBody, User.class);
             
-            if (newUser.getEmail() == null || newUser.getPassword() == null || newUser.getRoleId() == null) {
+            if (newUser.getEmail() == null || newUser.getPassword() == null) {
                 return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
-                        .body("Email, password y roleId son obligatorios")
+                        .body("Email y password son obligatorios")
                         .build();
             }
             
-            boolean success = UserDAO.createUser(newUser.getEmail(), newUser.getPassword(), newUser.getRoleId());
+            // Usar el método que implementa la asignación de rol por defecto mediante eventos
+            boolean success = UserDAO.createUserWithDefaultRole(newUser.getEmail(), newUser.getPassword(), newUser.getRoleId());
             
             if (success) {
                 return request.createResponseBuilder(HttpStatus.CREATED)
